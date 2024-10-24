@@ -206,7 +206,7 @@ const getBasicUserInfo = asyncErrorHandler(async (req: Request, res: Response, n
 
   if (userInfo) {
     const userData = {
-      communityName: userInfo.communityId?.name,
+      communityName: userInfo.communityId?.name, 
       communityImg: userInfo.communityId?.hero?.url,
       profileImg: userInfo.profileImg?.url
     };
@@ -265,7 +265,7 @@ const changePassword=asyncErrorHandler(async (req: Request, res: Response, next:
   res.status(200).json({message:'Password changed successfully'})
 })
 
-//for connections
+//for connections 
 const getUserConnections = asyncErrorHandler(async (req: Request, res: Response) => {
   const userId = req.params.userId;
 
@@ -278,7 +278,7 @@ const getUserConnections = asyncErrorHandler(async (req: Request, res: Response)
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
- 
+
   res.status(200).json({
     connections: user.connections,
     connectionRequests: user.connectionRequests,
@@ -300,21 +300,28 @@ const sendConnectionRequest = asyncErrorHandler(async (req: Request, res: Respon
   if (!fromUser || !toUser) {
      throw new NotFoundError('User not found')
   }
-
-  const existingRequest = toUser.connectionRequests.find(
-      request => request.fromUserId.toString() === fromId
+  const existingRequestIndex = toUser.connectionRequests.findIndex(
+    request => request.fromUserId.toString() === fromId
   );
 
-  if (existingRequest) {
-      throw new ConflictError('Connection request already sent');
-  }
+  console.log('Existing Request Index:', existingRequestIndex);
 
-  const fromUserId = new mongoose.Types.ObjectId(fromId);
-  toUser.connectionRequests.push({
+  if (existingRequestIndex !== -1) {
+    if (toUser.connectionRequests[existingRequestIndex].status !== 'declined') {
+      throw new ConflictError('Connection request already sent');
+    } else {
+      toUser.connectionRequests[existingRequestIndex].status = 'pending';
+      toUser.connectionRequests[existingRequestIndex].sentAt = new Date();
+    }
+  } else {
+    const fromUserId = new mongoose.Types.ObjectId(fromId);
+    toUser.connectionRequests.push({
       fromUserId: fromUserId,
       status: 'pending',
       sentAt: new Date()
-  });
+    });
+  }
+
 
   await fromUser.save();
   await toUser.save();

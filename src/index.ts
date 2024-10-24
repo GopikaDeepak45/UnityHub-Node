@@ -2,6 +2,7 @@ import express, { Request, Response,NextFunction } from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser';
 import "dotenv/config"
+import http from 'http'; 
 import connectDB from './config/database'
 import adminRoutes from './routes/adminRoutes'
 import commAdminRoutes from './routes/commAdminRoutes'
@@ -10,9 +11,12 @@ import { getLandingPage, getLandingPageWithSearch, sendMail } from './controller
 import authRoutes from './routes/authRoutes';
 import ConnectCloudinary from './config/cloudinary';
 import userRoutes from './routes/userRoutes';
-import { NotFoundError } from './errors/NotFoundError';
+import { NotFoundError } from './errors/NotFoundError'; 
+import { setupSocket } from './socket';
 
 const app=express()
+const server = http.createServer(app); // Create the HTTP server
+
 connectDB()
 
 app.use(express.json())  
@@ -34,7 +38,7 @@ app.post('/api/contact',sendMail)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/admin',adminRoutes);
-app.use('/api/commAdmin',commAdminRoutes);
+app.use('/api/commAdmin',commAdminRoutes); 
 app.use('/api/user',userRoutes)
 
 
@@ -47,7 +51,16 @@ app.all("*", (req:Request, res:Response, next:NextFunction) => {
     throw new NotFoundError('Resource not found')
 });
 
-// Error handling middleware
+// Error handling middleware 
 app.use(errorHandler)
 
-app.listen(3000,()=>console.log("App listening on port 3000"))
+// app.listen(3000,()=>console.log("App listening on port 3000"))  //now for chat also so app to server
+
+
+// Setup Socket.IO
+setupSocket(server); // Call the socket setup function and pass in the server
+
+// Start the server
+server.listen(3000, () => {
+  console.log("App listening on port 3000");
+});

@@ -7,6 +7,7 @@ import checkUserBlockedStatus from "../middlewares/checkUserBlockedStatus";
 import { addBuildingServiceSchedule, getAvailableSlotsForDay, getBuildingServicesdataUser } from "../controllers/buildingServiceController";
 import { addCommentGroups, addCommentLikeGroups, addLikeGroups, addPostGroups, deleteCommentLikeGroups, deleteLikeGroups, fetchCommentsDataGroups, fetchPostDataGroups } from "../controllers/groupsPostController";
 import { addService, deleteService, editService, fetchApprovedUserServices, fetchService } from "../controllers/userServiceController";
+import { fetchChatHistory, fetchGroupChatHistory } from "../controllers/chatController";
 
 const router = express.Router();
 
@@ -49,9 +50,13 @@ router.post('/connections/send-connection-request',sendConnectionRequest)
 router.post('/connections/accept-connection-request',acceptConnectionRequest)
 router.post('/connections/decline-connection-request',declineConnectionRequest)
 
+router.get('/chat/history/:fromUserId/:toUserId', verifyToken, fetchChatHistory);
+
+
 router.get('/groups',fetchGroupsDataUser)
 router.get('/group/isUserMember',isUserMember)
 router.get('/group/members',fetchGroupMembersData)
+router.get('/group/history/:groupId', fetchGroupChatHistory);
 router.post('/group/joinGroup',joinGroup)
 router.get('/group/posts',fetchPostDataGroups)
 router.get('/group/posts/comments',fetchCommentsDataGroups)
